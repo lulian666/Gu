@@ -11,17 +11,125 @@ In this commit, I implemented context and router struct. They are both quite sim
 
 ## Interface
 
+### Context
+
+<br/>
+
+Context struct
+<!-- NOTE-swimm-snippet: the lines below link your snippet to Swimm -->
+### 📄 gu/context.go
+```go
+11     type Context struct {
+12     	Writer http.ResponseWriter
+13     	R      *http.Request
+14     
+15     	Path       string
+16     	Method     string
+17     	StatusCode int
+18     }
+19     
+```
+
+<br/>
+
+Methods of Context type
+<!-- NOTE-swimm-snippet: the lines below link your snippet to Swimm -->
+### 📄 gu/context.go
+```go
+29     func (c *Context) PostForm(key string) string {
+30     	return c.R.FormValue(key)
+31     }
+32     
+33     func (c *Context) Query(key string) string {
+34     	return c.R.URL.Query().Get(key)
+35     }
+36     
+37     func (c *Context) Status(code int) {
+38     	c.StatusCode = code
+39     	c.Writer.WriteHeader(code)
+40     }
+41     
+42     func (c *Context) SetHeader(key, value string) {
+43     	c.Writer.Header().Set(key, value)
+44     }
+45     
+46     func (c *Context) String(code int, format string, values ...interface{}) {
+47     	c.SetHeader("Content-Type", "text/plain")
+48     	c.Status(code)
+49     	c.Writer.Write([]byte(fmt.Sprintf(format, values...)))
+50     }
+51     
+52     func (c *Context) JSON(code int, obj interface{}) {
+53     	c.SetHeader("Content-Type", "application/json")
+54     	c.Status(code)
+55     	err := json.NewEncoder(c.Writer).Encode(obj)
+56     	if err != nil {
+57     		http.Error(c.Writer, err.Error(), 500)
+58     	}
+59     }
+60     
+61     func (c *Context) Data(code int, data []byte) {
+62     	c.Status(code)
+63     	c.Writer.Write(data)
+64     }
+65     
+66     func (c *Context) HTML(code int, html string) {
+67     	c.SetHeader("Content-Type", "text/html")
+68     	c.Status(code)
+69     	c.Writer.Write([]byte(html))
+70     }
+```
+
+<br/>
+
+### router
+
+<br/>
+
+router struct
+<!-- NOTE-swimm-snippet: the lines below link your snippet to Swimm -->
+### 📄 gu/router.go
+```go
+8      type router struct {
+9      	handlers map[string]HandlerFunc
+10     }
+```
+
+<br/>
+
+Methods of router type
+<!-- NOTE-swimm-snippet: the lines below link your snippet to Swimm -->
+### 📄 gu/router.go
+```go
+18     func (r *router) addRoute(method string, pattern string, handler HandlerFunc) {
+19     	log.Printf("Route %4s - %s", method, pattern)
+20     	key := method + "-" + pattern
+21     	r.handlers[key] = handler
+22     }
+23     
+24     func (r *router) handle(c *Context) {
+25     	key := c.Method + "-" + c.Path
+26     	if handler, ok := r.handlers[key]; ok {
+27     		handler(c)
+28     	} else {
+29     		c.String(http.StatusNotFound, "404 NOT FOUND: %s\n", c.Path)
+30     	}
+31     }
+```
+
+<br/>
+
 ## Directory structure
 
-{{Use `/path` and mention the main folders within this component/service}}
+Context is under `📄 gu/context.go`
 
-## Design decisions
+router is under `📄 gu/router.go`
 
-{{Explain key design decisions}}
+## Structure
 
-## Glossary
+<br/>
 
-Here are some important terms to know:
+<div align="center"><img src="https://firebasestorage.googleapis.com/v0/b/swimmio-content/o/repositories%2FZ2l0aHViJTNBJTNBR3UlM0ElM0FsdWxpYW42NjY%3D%2F525d7947-1317-46dc-b35e-e8da5f2648a1.png?alt=media&token=a695832e-62dc-4d2d-b6ca-65adcfe3f4a5" style="width:'50%'"/></div>
 
 <br/>
 
