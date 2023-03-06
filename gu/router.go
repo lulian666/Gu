@@ -1,7 +1,6 @@
 package gu
 
 import (
-	"log"
 	"net/http"
 	"strings"
 )
@@ -33,7 +32,7 @@ func parsePattern(pattern string) []string {
 }
 
 func (r *router) addRoute(method string, pattern string, handler HandlerFunc) {
-	log.Printf("Route %4s - %s", method, pattern)
+
 	parts := parsePattern(pattern)
 	key := method + "-" + pattern
 	_, ok := r.roots[method]
