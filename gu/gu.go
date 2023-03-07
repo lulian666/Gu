@@ -18,19 +18,12 @@ type Engine struct {
 	groups []*RouterGroup
 }
 
-func newRootGroup() *RouterGroup {
-	return &RouterGroup{
-		prefix: "",
-		router: newRouter(),
-	}
-}
-
 func New() *Engine {
-	group := newRootGroup()
+	group := &RouterGroup{router: newRouter()}
 	engine := &Engine{
 		RouterGroup: group,
+		groups:      []*RouterGroup{group},
 	}
-	engine.groups = []*RouterGroup{engine.RouterGroup}
 	return engine
 }
 
