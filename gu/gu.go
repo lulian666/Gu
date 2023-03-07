@@ -10,7 +10,6 @@ type HandlerFunc func(c *Context)
 type RouterGroup struct {
 	prefix      string
 	middlewares []HandlerFunc
-	parent      *RouterGroup
 	*router
 }
 
@@ -38,7 +37,6 @@ func New() *Engine {
 func (group *RouterGroup) Group(prefix string) *RouterGroup {
 	newGroup := &RouterGroup{
 		prefix: group.prefix + prefix,
-		parent: group,
 		router: group.router,
 	}
 	return newGroup
