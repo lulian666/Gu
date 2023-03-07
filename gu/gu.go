@@ -5,41 +5,49 @@ import (
 	"net/http"
 )
 
-type HandlerFunc func(*Context)
+type HandlerFunc func(c *Context)
 
 type RouterGroup struct {
 	prefix      string
 	middlewares []HandlerFunc
-	engine      *Engine
+	parent      *RouterGroup
+	*router
 }
 
 type Engine struct {
-	router *router
 	*RouterGroup
 	groups []*RouterGroup
 }
 
+func newRootGroup() *RouterGroup {
+	return &RouterGroup{
+		prefix: "",
+		router: newRouter(),
+	}
+}
+
 func New() *Engine {
-	engine := &Engine{router: newRouter()}
-	engine.RouterGroup = &RouterGroup{engine: engine}
+	group := newRootGroup()
+	engine := &Engine{
+		RouterGroup: group,
+	}
 	engine.groups = []*RouterGroup{engine.RouterGroup}
 	return engine
 }
 
 func (group *RouterGroup) Group(prefix string) *RouterGroup {
-	engine := group.engine
 	newGroup := &RouterGroup{
 		prefix: group.prefix + prefix,
-		engine: engine,
+		parent: group,
+		router: group.router,
 	}
-	engine.groups = append(engine.groups, newGroup)
 	return newGroup
 }
 
 func (group *RouterGroup) addRoute(method string, comp string, handler HandlerFunc) {
 	pattern := group.prefix + comp
 	log.Printf("Route %4s - %s", method, pattern)
-	group.engine.router.addRoute(method, pattern, handler)
+	group.router.addRoute(method, pattern, handler)
 }
 
 func (group *RouterGroup) GET(pattern string, handler HandlerFunc) {
@@ -48,6 +56,12 @@ func (group *RouterGroup) GET(pattern string, handler HandlerFunc) {
 
 func (group *RouterGroup) POST(pattern string, handler HandlerFunc) {
 	group.addRoute("POST", pattern, handler)
+}
+
+func (e *Engine) Group(prefix string) *RouterGroup {
+	group := e.RouterGroup.Group(prefix)
+	e.groups = append(e.groups, group)
+	return group
 }
 
 func (e *Engine) ServeHTTP(w http.ResponseWriter, r *http.Request) {

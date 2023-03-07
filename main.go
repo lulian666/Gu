@@ -35,5 +35,12 @@ func main() {
 		})
 	}
 
+	v3 := v2.Group("/v3")
+	{
+		v3.GET("/happy", func(c *gu.Context) {
+			c.String(http.StatusOK, "hello, you're at %s\n", c.Path)
+		})
+	}
+
 	e.Run(":9999")
 }
