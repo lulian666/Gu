@@ -15,14 +15,14 @@ type RouterGroup struct {
 
 type Engine struct {
 	*RouterGroup
-	groups []*RouterGroup
+	//groups []*RouterGroup
 }
 
 func New() *Engine {
 	group := &RouterGroup{router: newRouter()}
 	engine := &Engine{
 		RouterGroup: group,
-		groups:      []*RouterGroup{group},
+		//groups:      []*RouterGroup{group},
 	}
 	return engine
 }
@@ -49,11 +49,11 @@ func (group *RouterGroup) POST(pattern string, handler HandlerFunc) {
 	group.addRoute("POST", pattern, handler)
 }
 
-func (e *Engine) Group(prefix string) *RouterGroup {
-	group := e.RouterGroup.Group(prefix)
-	e.groups = append(e.groups, group)
-	return group
-}
+//func (e *Engine) Group(prefix string) *RouterGroup {
+//	group := e.RouterGroup.Group(prefix)
+//	e.groups = append(e.groups, group)
+//	return group
+//}
 
 func (e *Engine) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	c := newContext(w, r)
