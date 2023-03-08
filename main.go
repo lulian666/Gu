@@ -7,6 +7,7 @@ import (
 
 func main() {
 	e := gu.New()
+	e.Use(gu.Logger())
 	e.GET("/", func(c *gu.Context) {
 		c.HTML(http.StatusOK, "<h1>gu-library</h1>")
 	})
