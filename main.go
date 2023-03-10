@@ -1,40 +1,59 @@
 package main
 
 import (
+	"fmt"
 	"gu"
+	"html/template"
 	"net/http"
+	"time"
 )
+
+type student struct {
+	Name string
+	Age  int8
+}
+
+func FormatAsDate(t time.Time) string {
+	year, month, day := t.Date()
+	return fmt.Sprintf("%d-%02d-%02d", year, month, day)
+}
 
 func main() {
 	e := gu.New()
-	e.Use(gu.Logger())
-	e.GET("/", func(c *gu.Context) {
-		c.HTML(http.StatusOK, "<h1>gu-library</h1>")
+	e.Use(gu.Logger(), gu.Recovery())
+
+	e.SetFuncMap(template.FuncMap{
+		"FormatAsDate": FormatAsDate,
 	})
 
-	v1 := e.Group("/v1")
-	{
-		v1.GET("/", func(c *gu.Context) {
-			c.HTML(http.StatusOK, "<h1>Hello Gee</h1>")
-		})
+	e.LoadHTMLGlob("templates/*")
+	e.Static("/assets", "./static")
 
-		v1.GET("/hello", func(c *gu.Context) {
-			c.String(http.StatusOK, "hello %s, you're at %s\n", c.Query("name"), c.Path)
-		})
-	}
+	stu1 := &student{Name: "Gu", Age: 20}
+	stu2 := &student{Name: "Jack", Age: 22}
 
-	v2 := e.Group("/v2")
-	{
-		v2.GET("/hello/:name", func(c *gu.Context) {
-			c.String(http.StatusOK, "hello %s, you're at %s\n", c.Param("name"), c.Path)
+	e.GET("/", func(c *gu.Context) {
+		c.HTML(http.StatusOK, "css.tmpl", nil)
+	})
+
+	e.GET("/students", func(c *gu.Context) {
+		c.HTML(http.StatusOK, "arr.tmpl", gu.H{
+			"title":  "gu",
+			"stuArr": [2]*student{stu1, stu2},
 		})
-		v2.POST("/login", func(c *gu.Context) {
-			c.JSON(http.StatusOK, gu.H{
-				"username": c.PostForm("username"),
-				"password": c.PostForm("password"),
-			})
+	})
+
+	e.GET("/date", func(c *gu.Context) {
+		c.HTML(http.StatusOK, "custom_func.tmpl", gu.H{
+			"title": "gu",
+			"now":   time.Date(2019, 8, 17, 0, 0, 0, 0, time.UTC),
 		})
-	}
+	})
+
+	e.GET("/panic", func(c *gu.Context) {
+		names := []string{"gu"}
+		c.String(http.StatusOK, names[100])
+	})
 
 	e.Run(":9999")
 }
